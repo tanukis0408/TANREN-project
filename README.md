@@ -163,6 +163,12 @@ cd metal
 cargo build --release
 ```
 
+### Build release artifacts (local, not committed)
+
+```bash
+./scripts/build_release_artifacts.sh v0.1.0 linux-x86_64
+```
+
 ### Run
 
 ```bash
