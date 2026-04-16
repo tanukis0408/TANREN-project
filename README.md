@@ -167,10 +167,16 @@ cargo build --release
 
 ```bash
 # Run a file
-cargo run hello.mt
+cargo run -- hello.mt
+
+# Run explicit command
+cargo run -- run hello.mt
+
+# Validate file (lex/parse/compile only)
+cargo run -- check hello.mt
 
 # Start REPL
-cargo run
+cargo run --
 ```
 
 ---
@@ -227,16 +233,17 @@ say "Hello, " + name + "!"
 metal/
 ├── Cargo.toml
 ├── README.md
-├── src/
-│   ├── main.rs       # Entry point + REPL
-│   ├── token.rs      # Token types
-│   ├── lexer.rs      # Lexer
-│   ├── ast.rs        # AST nodes
-│   ├── parser.rs     # Parser
-│   ├── bytecode.rs   # Bytecode instructions
-│   ├── compiler.rs   # AST → Bytecode
-│   ├── value.rs      # Runtime values
-│   └── vm.rs         # Virtual machine
+├── main.rs           # Entry point + REPL + tests
+├── token.rs          # Token types
+├── lexer.rs          # Lexer
+├── ast.rs            # AST nodes
+├── parser.rs         # Parser
+├── bytecode.rs       # Bytecode instructions
+├── compiler.rs       # AST → Bytecode
+├── value.rs          # Runtime values
+├── vm.rs             # Virtual machine
+├── ide/
+│   └── metal-ide/    # VS Code-based Metal IDE extension + theme
 └── examples/
     ├── hello.mt
     ├── fizzbuzz.mt

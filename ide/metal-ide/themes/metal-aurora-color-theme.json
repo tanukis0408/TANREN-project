@@ -1,0 +1,103 @@
+{
+  "$schema": "vscode://schemas/color-theme",
+  "name": "Metal Aurora (Liquid Glass)",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#0F1117",
+    "editor.foreground": "#DDE6FF",
+    "editor.lineHighlightBackground": "#1A1F2EAA",
+    "editor.selectionBackground": "#3E63DD55",
+    "editor.inactiveSelectionBackground": "#3E63DD33",
+    "editorCursor.foreground": "#8CF6FF",
+    "editorWhitespace.foreground": "#2A3248",
+    "editorIndentGuide.background1": "#1D2438",
+    "editorIndentGuide.activeBackground1": "#2D3B5A",
+    "editorGutter.background": "#0C0E13",
+    "editorGutter.modifiedBackground": "#66D9E8",
+    "editorGutter.addedBackground": "#7DFFB3",
+    "editorGutter.deletedBackground": "#FF7D96",
+    "sideBar.background": "#0C0E13",
+    "sideBar.foreground": "#C3D0F5",
+    "activityBar.background": "#101521",
+    "activityBar.foreground": "#DDE6FF",
+    "titleBar.activeBackground": "#11182A",
+    "titleBar.activeForeground": "#E8EEFF",
+    "statusBar.background": "#11182A",
+    "statusBar.foreground": "#DDE6FF",
+    "panel.background": "#0E1320",
+    "panel.border": "#2A3350",
+    "input.background": "#151D31",
+    "input.foreground": "#DDE6FF",
+    "input.border": "#2F4278",
+    "button.background": "#4463FF",
+    "button.foreground": "#F7FAFF",
+    "button.hoverBackground": "#5573FF",
+    "tab.activeBackground": "#171E31",
+    "tab.inactiveBackground": "#0F1526",
+    "tab.activeForeground": "#E5ECFF",
+    "tab.inactiveForeground": "#96A3C9"
+  },
+  "tokenColors": [
+    {
+      "scope": [
+        "comment",
+        "punctuation.definition.comment"
+      ],
+      "settings": {
+        "foreground": "#6E7CA3",
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "scope": [
+        "keyword.control",
+        "keyword.operator"
+      ],
+      "settings": {
+        "foreground": "#7AB8FF"
+      }
+    },
+    {
+      "scope": [
+        "entity.name.function"
+      ],
+      "settings": {
+        "foreground": "#B49CFF"
+      }
+    },
+    {
+      "scope": [
+        "variable",
+        "variable.other.readwrite"
+      ],
+      "settings": {
+        "foreground": "#DDE6FF"
+      }
+    },
+    {
+      "scope": [
+        "constant.numeric"
+      ],
+      "settings": {
+        "foreground": "#FFCA85"
+      }
+    },
+    {
+      "scope": [
+        "string.quoted",
+        "constant.character.escape"
+      ],
+      "settings": {
+        "foreground": "#7DFFB3"
+      }
+    },
+    {
+      "scope": [
+        "constant.language.boolean"
+      ],
+      "settings": {
+        "foreground": "#8CF6FF"
+      }
+    }
+  ]
+}

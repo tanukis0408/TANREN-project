@@ -6,6 +6,13 @@ pub struct Compiler {
     pub chunk: Chunk,
     scopes: Vec<HashMap<String, usize>>,
     local_count: usize,
+    loop_stack: Vec<LoopContext>,
+}
+
+#[derive(Default)]
+struct LoopContext {
+    break_jumps: Vec<usize>,
+    continue_jumps: Vec<usize>,
 }
 
 impl Compiler {
@@ -14,6 +21,7 @@ impl Compiler {
             chunk: Chunk::new(),
             scopes: vec![HashMap::new()],
             local_count: 0,
+            loop_stack: Vec::new(),
         }
     }
 
@@ -41,6 +49,43 @@ impl Compiler {
             scope.insert(name.to_string(), idx);
         }
         idx
+    }
+
+    fn begin_loop(&mut self) {
+        self.loop_stack.push(LoopContext::default());
+    }
+
+    fn register_break(&mut self) {
+        let jump_pos = self.chunk.emit(Op::Jump(0));
+        if let Some(ctx) = self.loop_stack.last_mut() {
+            ctx.break_jumps.push(jump_pos);
+        } else {
+            panic!("'break' used outside of a loop");
+        }
+    }
+
+    fn register_continue(&mut self) {
+        let jump_pos = self.chunk.emit(Op::Jump(0));
+        if let Some(ctx) = self.loop_stack.last_mut() {
+            ctx.continue_jumps.push(jump_pos);
+        } else {
+            panic!("'next' used outside of a loop");
+        }
+    }
+
+    fn end_loop(&mut self, continue_target: usize, break_target: usize) {
+        let ctx = self
+            .loop_stack
+            .pop()
+            .expect("Compiler loop stack underflow");
+
+        for jump in ctx.break_jumps {
+            self.chunk.patch(jump, Op::Jump(break_target));
+        }
+
+        for jump in ctx.continue_jumps {
+            self.chunk.patch(jump, Op::Jump(continue_target));
+        }
     }
 
     pub fn compile(&mut self, program: &[Expr]) {
@@ -213,6 +258,7 @@ impl Compiler {
 
                 let var_idx = self.declare_local(var);
                 let loop_start = self.chunk.code.len();
+                self.begin_loop();
 
                 let iter_next = self.chunk.emit(Op::IterNext(0));
                 self.chunk.emit(Op::SetLocal(var_idx));
@@ -227,10 +273,12 @@ impl Compiler {
 
                 let loop_end = self.chunk.code.len();
                 self.chunk.patch(iter_next, Op::IterNext(loop_end));
+                self.end_loop(loop_start, loop_end);
             }
 
             Expr::While { condition, body } => {
                 let loop_start = self.chunk.code.len();
+                self.begin_loop();
 
                 self.compile_expr(condition);
                 let exit = self.chunk.emit(Op::JumpIfFalse(0));
@@ -245,10 +293,12 @@ impl Compiler {
 
                 let end = self.chunk.code.len();
                 self.chunk.patch(exit, Op::JumpIfFalse(end));
+                self.end_loop(loop_start, end);
             }
 
             Expr::Loop { body } => {
                 let loop_start = self.chunk.code.len();
+                self.begin_loop();
 
                 self.push_scope();
                 for stmt in body {
@@ -257,6 +307,8 @@ impl Compiler {
                 self.pop_scope();
 
                 self.chunk.emit(Op::Jump(loop_start));
+                let loop_end = self.chunk.code.len();
+                self.end_loop(loop_start, loop_end);
             }
 
             Expr::FnDecl { name, params, body } => {
@@ -333,11 +385,11 @@ impl Compiler {
             }
 
             Expr::Break => {
-                self.chunk.emit(Op::Jump(usize::MAX));
+                self.register_break();
             }
 
             Expr::Next => {
-                self.chunk.emit(Op::Jump(usize::MAX));
+                self.register_continue();
             }
 
             Expr::Range { start, end } => {
