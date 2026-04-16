@@ -5,3 +5,6 @@ edition = "2021"
 description = "Metal programming language interpreter"
 
 [dependencies]
+[[bin]]
+name = "metal"
+path = "main.rs"

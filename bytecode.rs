@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum Op {
     // Константы
@@ -74,6 +75,7 @@ pub enum Const {
     Func(FuncProto),
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FuncProto {
     pub name: String,

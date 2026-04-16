@@ -1,0 +1,66 @@
+{
+  "name": "metal-ide",
+  "displayName": "Metal IDE",
+  "description": "A VS Code based IDE experience for the Metal programming language with a custom Liquid Glass design language.",
+  "version": "0.1.0",
+  "publisher": "tanren",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Themes",
+    "Snippets"
+  ],
+  "keywords": [
+    "metal",
+    "ide",
+    "language",
+    "theme",
+    "mac-style"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "metal",
+        "aliases": [
+          "Metal",
+          "metal"
+        ],
+        "extensions": [
+          ".mt"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "metal",
+        "scopeName": "source.metal",
+        "path": "./syntaxes/metal.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "metal",
+        "path": "./snippets/metal.code-snippets"
+      }
+    ],
+    "themes": [
+      {
+        "label": "Metal Aurora (Liquid Glass)",
+        "uiTheme": "vs-dark",
+        "path": "./themes/metal-aurora-color-theme.json"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TANREN/metal"
+  },
+  "homepage": "https://github.com/TANREN/metal",
+  "bugs": {
+    "url": "https://github.com/TANREN/metal/issues"
+  }
+}

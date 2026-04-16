@@ -19,14 +19,6 @@ impl Parser {
         }
     }
 
-    fn peek(&self) -> &Token {
-        if self.pos + 1 < self.tokens.len() {
-            &self.tokens[self.pos + 1]
-        } else {
-            &Token::Eof
-        }
-    }
-
     fn advance(&mut self) -> Token {
         let tok = self.tokens[self.pos].clone();
         if self.pos < self.tokens.len() - 1 {

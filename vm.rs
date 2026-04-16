@@ -68,6 +68,27 @@ impl RangeIter {
 }
 
 impl VM {
+    fn expect_arity(name: &str, args: &[Value], expected: usize) {
+        if args.len() != expected {
+            panic!(
+                "{}() expects {} argument(s), got {}",
+                name,
+                expected,
+                args.len()
+            );
+        }
+    }
+
+    fn as_f64_pair(a: &Value, b: &Value) -> Option<(f64, f64)> {
+        match (a, b) {
+            (Value::Int(a), Value::Int(b)) => Some((*a as f64, *b as f64)),
+            (Value::Int(a), Value::Float(b)) => Some((*a as f64, *b)),
+            (Value::Float(a), Value::Int(b)) => Some((*a, *b as f64)),
+            (Value::Float(a), Value::Float(b)) => Some((*a, *b)),
+            _ => None,
+        }
+    }
+
     pub fn new(chunk: Chunk) -> Self {
         let mut vm = VM {
             chunk,
@@ -123,14 +144,6 @@ impl VM {
         }
     }
 
-    fn get_ip(&self) -> usize {
-        if let Some(frame) = self.call_stack.last() {
-            frame.ip
-        } else {
-            self.ip
-        }
-    }
-
     fn set_ip(&mut self, ip: usize) {
         if let Some(frame) = self.call_stack.last_mut() {
             frame.ip = ip;
@@ -166,6 +179,7 @@ impl VM {
     fn call_builtin(&self, name: &str, args: Vec<Value>) -> Value {
         match name {
             "len" => {
+                Self::expect_arity(name, &args, 1);
                 match &args[0] {
                     Value::Str(s)  => Value::Int(s.len() as i64),
                     Value::List(l) => Value::Int(l.len() as i64),
@@ -173,9 +187,11 @@ impl VM {
                 }
             }
             "type" => {
+                Self::expect_arity(name, &args, 1);
                 Value::Str(args[0].type_name().to_string())
             }
             "int" => {
+                Self::expect_arity(name, &args, 1);
                 match &args[0] {
                     Value::Str(s)   => Value::Int(s.parse().unwrap_or(0)),
                     Value::Float(f) => Value::Int(*f as i64),
@@ -184,6 +200,7 @@ impl VM {
                 }
             }
             "float" => {
+                Self::expect_arity(name, &args, 1);
                 match &args[0] {
                     Value::Str(s)   => Value::Float(s.parse().unwrap_or(0.0)),
                     Value::Int(n)   => Value::Float(*n as f64),
@@ -192,10 +209,14 @@ impl VM {
                 }
             }
             "str" => {
+                Self::expect_arity(name, &args, 1);
                 Value::Str(format!("{}", args[0]))
             }
             "input" => {
-                if !args.is_empty() {
+                if args.len() > 1 {
+                    panic!("input() expects 0 or 1 argument(s), got {}", args.len());
+                }
+                if args.len() == 1 {
                     print!("{}", args[0]);
                     io::stdout().flush().unwrap();
                 }
@@ -204,6 +225,7 @@ impl VM {
                 Value::Str(line.trim().to_string())
             }
             "sqrt" => {
+                Self::expect_arity(name, &args, 1);
                 match &args[0] {
                     Value::Int(n)   => Value::Float((*n as f64).sqrt()),
                     Value::Float(f) => Value::Float(f.sqrt()),
@@ -211,6 +233,7 @@ impl VM {
                 }
             }
             "abs" => {
+                Self::expect_arity(name, &args, 1);
                 match &args[0] {
                     Value::Int(n)   => Value::Int(n.abs()),
                     Value::Float(f) => Value::Float(f.abs()),
@@ -218,20 +241,27 @@ impl VM {
                 }
             }
             "max" => {
+                Self::expect_arity(name, &args, 2);
                 match (&args[0], &args[1]) {
                     (Value::Int(a), Value::Int(b))     => Value::Int(*a.max(b)),
                     (Value::Float(a), Value::Float(b)) => Value::Float(a.max(*b)),
+                    (Value::Int(a), Value::Float(b))   => Value::Float((*a as f64).max(*b)),
+                    (Value::Float(a), Value::Int(b))   => Value::Float((*a).max(*b as f64)),
                     _ => panic!("max() requires numbers"),
                 }
             }
             "min" => {
+                Self::expect_arity(name, &args, 2);
                 match (&args[0], &args[1]) {
                     (Value::Int(a), Value::Int(b))     => Value::Int(*a.min(b)),
                     (Value::Float(a), Value::Float(b)) => Value::Float(a.min(*b)),
+                    (Value::Int(a), Value::Float(b))   => Value::Float((*a as f64).min(*b)),
+                    (Value::Float(a), Value::Int(b))   => Value::Float((*a).min(*b as f64)),
                     _ => panic!("min() requires numbers"),
                 }
             }
             "push" => {
+                Self::expect_arity(name, &args, 2);
                 match &args[0] {
                     Value::List(items) => {
                         let mut new_list = items.clone();
@@ -352,9 +382,18 @@ impl VM {
                             if *b == 0 { panic!("Division by zero") }
                             Value::Int(a / b)
                         }
-                        (Value::Float(a), Value::Float(b)) => Value::Float(a / b),
-                        (Value::Int(a), Value::Float(b))   => Value::Float(*a as f64 / b),
-                        (Value::Float(a), Value::Int(b))   => Value::Float(a / *b as f64),
+                        (Value::Float(a), Value::Float(b)) => {
+                            if *b == 0.0 { panic!("Division by zero") }
+                            Value::Float(a / b)
+                        }
+                        (Value::Int(a), Value::Float(b))   => {
+                            if *b == 0.0 { panic!("Division by zero") }
+                            Value::Float(*a as f64 / b)
+                        }
+                        (Value::Float(a), Value::Int(b))   => {
+                            if *b == 0 { panic!("Division by zero") }
+                            Value::Float(a / *b as f64)
+                        }
                         _ => panic!("Cannot divide {} by {}", a.type_name(), b.type_name()),
                     };
                     self.push(result);
@@ -364,7 +403,12 @@ impl VM {
                     let b = self.pop();
                     let a = self.pop();
                     match (&a, &b) {
-                        (Value::Int(a), Value::Int(b)) => self.push(Value::Int(a % b)),
+                        (Value::Int(a), Value::Int(b)) => {
+                            if *b == 0 {
+                                panic!("Modulo by zero");
+                            }
+                            self.push(Value::Int(a % b))
+                        }
                         _ => panic!("Cannot mod {} and {}", a.type_name(), b.type_name()),
                     }
                 }
@@ -425,38 +469,36 @@ impl VM {
                 Op::Less => {
                     let b = self.pop();
                     let a = self.pop();
-                    match (&a, &b) {
-                        (Value::Int(a), Value::Int(b))     => self.push(Value::Bool(a < b)),
-                        (Value::Float(a), Value::Float(b)) => self.push(Value::Bool(a < b)),
-                        _ => panic!("Cannot compare {} < {}", a.type_name(), b.type_name()),
+                    match Self::as_f64_pair(&a, &b) {
+                        Some((a, b)) => self.push(Value::Bool(a < b)),
+                        None => panic!("Cannot compare {} < {}", a.type_name(), b.type_name()),
                     }
                 }
 
                 Op::Greater => {
                     let b = self.pop();
                     let a = self.pop();
-                    match (&a, &b) {
-                        (Value::Int(a), Value::Int(b))     => self.push(Value::Bool(a > b)),
-                        (Value::Float(a), Value::Float(b)) => self.push(Value::Bool(a > b)),
-                        _ => panic!("Cannot compare {} > {}", a.type_name(), b.type_name()),
+                    match Self::as_f64_pair(&a, &b) {
+                        Some((a, b)) => self.push(Value::Bool(a > b)),
+                        None => panic!("Cannot compare {} > {}", a.type_name(), b.type_name()),
                     }
                 }
 
                 Op::LessEq => {
                     let b = self.pop();
                     let a = self.pop();
-                    match (&a, &b) {
-                        (Value::Int(a), Value::Int(b)) => self.push(Value::Bool(a <= b)),
-                        _ => panic!("Cannot compare"),
+                    match Self::as_f64_pair(&a, &b) {
+                        Some((a, b)) => self.push(Value::Bool(a <= b)),
+                        None => panic!("Cannot compare {} <= {}", a.type_name(), b.type_name()),
                     }
                 }
 
                 Op::GreaterEq => {
                     let b = self.pop();
                     let a = self.pop();
-                    match (&a, &b) {
-                        (Value::Int(a), Value::Int(b)) => self.push(Value::Bool(a >= b)),
-                        _ => panic!("Cannot compare"),
+                    match Self::as_f64_pair(&a, &b) {
+                        Some((a, b)) => self.push(Value::Bool(a >= b)),
+                        None => panic!("Cannot compare {} >= {}", a.type_name(), b.type_name()),
                     }
                 }
 
