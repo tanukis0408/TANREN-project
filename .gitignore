@@ -1,0 +1,6 @@
+/target/
+
+# Local/generated release artifacts (keep notes, ignore binaries/checksums)
+releases/*/metal-linux-*
+releases/*/*.tar.gz
+releases/*/SHA256SUMS.txt
